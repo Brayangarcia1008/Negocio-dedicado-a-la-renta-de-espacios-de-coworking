@@ -1,0 +1,165 @@
+from collections import namedtuple
+import datetime
+import random
+
+separador = "*" * 80
+Cliente = namedtuple("Cliente", "nombre")
+Sala = namedtuple("Sala", "nombre cupo")
+Evento = namedtuple("Evento", "folio nombre_evento clave_cliente ")
+Clave_Evento = namedtuple("Clave_Evento","fecha clave_sala")
+lista_clientes = {}
+lista_salas = {}
+reservaciones = {}
+
+
+while True:
+    print(separador)
+    print("Renta de Espacios de Coworking")
+    print("Menú principal\n")
+    print("1. Registrar la reservación de una sala.\n")
+    print("2. Editar el nombre del evento de una reservación.\n")
+    print("3. Consultar las reservaciones existentes para una fecha específica.\n")
+    print("4. Registrar un nuevo Cliente\n")
+    print("5. Registrar una sala\n")
+    print("0. Salir del Programa\n")
+    print(separador)
+    opcion = int(input("Escribe el número con la opción que deseas realizar: \n"))
+    print(separador)
+    
+    if opcion == 1:
+        
+        print("Reservación de una sala.\n")
+        
+        print("----- Para realizar la reservacion se debe autenticar el cliente ----")
+        
+        buscar_cliente = int(input("Ingrese la Clave del Cliente: "))
+            
+        if buscar_cliente in lista_clientes.keys():
+            fecha = input("Fecha a reservar (DD/MM/YYYY): ")
+            fecha_reserva = datetime.datetime.strptime(fecha, "%d/%m/%Y").date()
+            fecha_limite_reserva = fecha_reserva - datetime.timedelta(days=+2)
+            
+            if datetime.date.today() <= fecha_limite_reserva:                
+                
+                print(f"Cliente: {lista_clientes[buscar_cliente].nombre}")
+                print(f"Fecha a reservar: {fecha_reserva}\n")
+                print(f'{"Clave":<5} | {"Nombre de la Sala":<20} | {"Cupo":<8} | \n')
+                
+                if lista_salas == {}:
+                    print("No existen salas registradas")
+                        
+                else:
+                    salas_ocupadas = []
+                    #turnos_ocupados = []
+                    lista_reservas = list(reservaciones.keys())
+                    for clave in lista_reservas:
+                        if fecha_reserva == clave.fecha:
+                            salas_ocupadas.append(clave.clave_sala)
+                            #turnos_ocupados.append(reservaciones[clave].turno)
+                            
+                    
+                    for sala in lista_salas:
+                        if sala not in salas_ocupadas:
+                            print(f'{sala:<5} | {lista_salas[sala].nombre:<20} | {lista_salas[sala].cupo:<8} |')
+                    else:
+                        salas_disponibles = list(lista_salas.keys())
+                        if salas_disponibles == salas_ocupadas:
+                            print("No hay salas disponibles")
+                        else:
+                            sala_escoger = int(input("Ingrese la clave de la sala a escoger: "))
+                            
+                            if sala_escoger in salas_ocupadas:
+                                print("La sala seleccionada esta ocupada")
+                            else:
+                                """print("Turnos Disponibles")
+                                print("")
+                                for turno in lista_turnos:
+                                    if turno not in turnos_ocupados:
+                                        print("")
+                                
+                                turno = input("Escoja un turno disponible: ").upper()"""
+
+                                nombre_evento = input("Nombre del Evento: ")
+                                folio = random.randint(10000,20000)
+                                reservaciones[Clave_Evento(fecha_reserva,sala_escoger)] = Evento(folio,nombre_evento,buscar_cliente)
+                                print("*"*20)
+                                print("\nLa reservación se realizó con exito!\n")
+                                print(f"Folio de Reservación: {folio}")
+                                input("\nEnter para continuar\n")
+                
+                            
+            else:
+                print("\nERROR. La reservación de una sala se debe realizar al menos con 2 días de anticipación\n")
+        else:
+            print("\n***** La clave asociada con el cliente NO se encuentra ***** | Por favor ingrese otra clave\n")
+    
+    elif opcion == 2:
+        print("Modificar Reservaciones")
+        folio_consulta = int(input("Ingrese el folio de la reservacion: "))
+        if reservaciones:
+            for evento in reservaciones:
+                if folio_consulta == reservaciones[evento].folio:
+                    print(f'Nombre del Evento: {reservaciones[evento].nombre_evento}\n')
+                    nuevo_nombre = input("Nuevo nombre del evento: ")
+                    n_clave_cliente = reservaciones[evento].clave_cliente
+                    
+                    del reservaciones[evento]
+                    reservaciones[Clave_Evento(evento.fecha,evento.clave_sala)] = Evento(folio_consulta,nuevo_nombre,n_clave_cliente)
+                    print("\nCambios Efectuados con Exito!\n")
+                    break
+                else:
+                    print("No existe ninguna reservacion con ese Folio")
+        else:
+            print("Aún no hay reservaciones!")
+    
+        
+    elif opcion == 3:
+        print("Consulta de Reservaciones por fecha")
+        fecha_str = input("Ingrese la fecha: ")
+        consultar_fecha = datetime.datetime.strptime(fecha_str, "%d/%m/%Y").date()
+        lista_reservas = list(reservaciones.keys())
+        
+        print(f"REPORTE DE RESERVACIONES PARA EL DÍA {consultar_fecha}")
+        
+        print(f'{"SALA":<15} | {"CLIENTE":<30} | {"EVENTO":<30} | {"TURNO":<10} \n')
+        
+        for clave in lista_reservas:
+            if consultar_fecha == clave.fecha:
+                for evento in [reservaciones[clave]]:
+                    print(f'{lista_salas[clave.clave_sala].nombre:<15} | {lista_clientes[evento.clave_cliente].nombre:<30} | {evento.nombre_evento:<30} | {"TURNO":<10} \n')
+                
+        input("\nEnter para continuar\n")
+
+        
+    elif opcion == 4:
+        nombre_cliente = input("Ingrese el nombre del Cliente: ")
+        clave_cliente = random.randint(100,200)
+        
+        while clave_cliente == lista_clientes.keys():
+            clave_cliente = random.randint(100,200)
+
+        lista_clientes[clave_cliente] = Cliente(nombre_cliente)
+
+        print("\nCliente registrado con exito!\n")
+        print(f"Clave del Cliente: {clave_cliente}")
+        input("\nEnter para continuar\n")
+    
+    elif opcion == 5:
+        nombre_sala = input("Ingrese el nombre de la Sala: ")
+        cupo = int(input("Ingrese el cupo total para la Sala: "))
+
+
+        clave_sala = random.randint(100,200)
+        
+        while clave_sala == lista_salas.keys():
+            clave_sala = random.randint(100,200)
+
+
+        lista_salas[clave_sala] = Sala(nombre_sala, cupo)
+
+        print("\nSala registrada con exito!\n")
+        print(f"Clave de la Sala: {clave_sala}")
+        input("\nEnter para continuar\n")
+
+    if opcion == 0:
+        break
